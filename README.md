@@ -3,11 +3,10 @@
 This application is designed to provide an easy way to discover who represents you in the Oregon House and Senate, as well as the US Congress, based on an address search tool.
 
 
-```Replace 'rockstar-repo-template' and 'alaframboise' with your project and username```
 
 [View it live](http://htmlpreview.github.io/?https://github.com/eendrulat/leg-admin/blob/master/leg-search.html)
 
-![App](https://github.com/eendrulat/leg-admin/app.jpg)
+![App](http://htmlpreview.github.io/?https://github.com/eendrulat/leg-admin/app.jpg)
 
 ## Features
 * feature 1
