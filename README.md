@@ -5,9 +5,9 @@ This application is designed to provide an easy way to discover who represents y
 
 ```Replace 'rockstar-repo-template' and 'alaframboise' with your project and username```
 
-[View it live](http://eendrulat.github.com/leg-admin/leg-search.html)
+[View it live](http://htmlpreview.github.io/?https://github.com/eendrulat/leg-admin/blob/master/leg-search.html)
 
-![App](https://raw.github.com/alaframboise/rockstar-repo-template/master/app.jpg)
+![App](https://github.com/eendrulat/leg-admin/app.jpg)
 
 ## Features
 * feature 1
