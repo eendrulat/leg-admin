@@ -1,0 +1,65 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=7,IE=9">
+    <!--The viewport meta tag is used to improve the presentation and behavior of the samples 
+      on iOS devices-->
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no">
+    <title>Legislator Lookup</title>
+    <link rel="stylesheet" href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.4/js/dojo/dijit/themes/claro/claro.css">
+    <link rel="stylesheet" href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.4/js/esri/css/esri.css">
+	
+
+    <script>var dojoConfig = {parseOnLoad: true};</script>
+    <script src="http://serverapi.arcgisonline.com/jsapi/arcgis/3.4/"></script>
+    
+    <script type="text/javascript">
+      dojo.require("dijit.dijit"); // optimize: load dijit layer
+      dojo.require("dijit.form.Button");
+      dojo.require("dijit.form.TextBox");
+      
+      function submitForm() {
+        if (dojo.byId('addr').value != "") {
+          window.location = 'leg-districts.html?addr=' + dojo.byId('addr').value;
+        } else {
+          dojo.byId('errorMsg').innerHTML = "Please enter a valid address";
+        }
+      }
+      
+      function init() {
+        dojo.connect(dijit.byId('addr'), "onKeyPress", function(evt){
+          if (evt.keyCode == dojo.keys.ENTER) {
+            submitForm();
+          } else {
+            dojo.byId('errorMsg').innerHTML = "";
+          }
+        });
+      }
+      
+      dojo.ready(init);
+    </script>
+  </head>
+        <body class="claro">
+    
+<div id="wrapper" style="position: fixed; left: 50%; width: 300px; margin-left: -100px">
+
+			<h2 ><a href="http://www.oregonlegislature.gov" /></a><img name="" src="http://www.oregonlegislature.gov/ImagesAndVideo/MagGlass.png" width="60" height="60" align="center" alt="Magnifing Glass" /> Who Represents Me?</h2>
+		
+		<div style="text-align: left">
+			<div>
+				<span><strong>Enter an Address</strong></span>
+			</div>
+		
+				<div>
+                    <input name="addr" type="text" dojotype="dijit.form.TextBox" data-dojo-props="placeHolder: '*Requires address, city, state, and zip code'" id="addr" style="width:350px;"/>
+				</div>
+				<div>
+                    <button dojotype="dijit.form.Button" name="btnAddress" label="Find My District" onclick="javascript:submitForm();" id="btnAddress"/>
+					<span id="errorMsg"/>
+				</div>
+                
+			</div>
+ </div>             
+        </body>
+</html>

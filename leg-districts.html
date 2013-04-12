@@ -1,0 +1,494 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=7,IE=9">
+    <!--The viewport meta tag is used to improve the presentation and behavior of the samples 
+      on iOS devices-->
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no">
+    <title>Legislator Lookup</title>
+    <link rel="stylesheet" href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.4/js/dojo/dijit/themes/claro/claro.css">
+    <link rel="stylesheet" href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.4/js/esri/css/esri.css">
+    <style>
+			html, body
+			{
+				height: 100%;
+				width: 100%;
+				margin: 0;
+				padding: 0;
+			}
+			body
+			{
+				background-color: White;
+				overflow: hidden;
+			}
+			#header
+			{
+		background-color: #EFF1F5;
+		color: #333;
+		font-size: 12pt;
+		font-family: Arial;
+			}
+			a, img {
+		border:none;
+			}
+			.hideDistType {
+				display: none;
+			}
+			#footer
+			{
+				/*background-color:#444;
+				color:yellow;
+				font-size:10pt;
+				text-align:center;*/
+			  font-size:small;
+			}
+		.disclaimer {
+		font-size: 11px;
+		}
+    </style>
+
+
+    <script>var dojoConfig = {parseOnLoad: true};</script>
+    <script src="http://serverapi.arcgisonline.com/jsapi/arcgis/3.4/"></script>
+    
+    <script type="text/javascript">
+    dojo.require("esri.map");
+    dojo.require("esri.tasks.locator");
+    dojo.require("dijit.dijit"); // optimize: load dijit layer
+    dojo.require("dijit.form.Button");
+    dojo.require("dijit.form.RadioButton");
+    dojo.require("dijit.layout.BorderContainer");
+    dojo.require("dijit.layout.ContentPane");
+    dojo.require("dijit.layout.TabContainer");
+    dojo.require("esri.arcgis.utils");
+    dojo.require("esri.virtualearth.VETiledLayer");
+    dojo.require("dijit.TitlePane");
+    dojo.require("esri.dijit.BasemapGallery");
+    
+    var map = null;
+    var identifyTask, identifyParams;
+    var senateQueryTask, houseQueryTask, congressQueryTask;
+    var startExtent = null;
+    var locator;
+    var houseResults, senateResults, congressResults;
+    var highlightSymbol;
+    var initObj = {};
+    var locatorURL = "http://navigator.state.or.us/ArcGIS/rest/services/Locators/gc_Composite/GeocodeServer";
+    var webmapId = "fd9ef693999d4478906185952cd4e3c0";
+    var congressionalLayerId = 3;
+    var houseLayerId = 4;
+    var senateLayerId = 5;
+    var senateDistrictFieldName = "admin_senate_districts.District_1";
+    var houseDistrictFieldName = "admin_house_districts.District_1";
+    var congressDistrictFieldName = "District_1";
+    var legMapService = null;
+    var pinPointGL = null;
+    var h1, h2, h3;
+    
+    function init() {
+      //findby
+      //dist = district
+      //addr = address
+      //loc = lat/long
+      
+      //type (for district)
+      //h = house
+      //s = senate
+      //c = congressional district
+      highlightSymbol = new esri.symbol.SimpleFillSymbol(esri.symbol.SimpleFillSymbol.STYLE_SOLID, new esri.symbol.SimpleLineSymbol(esri.symbol.SimpleLineSymbol.STYLE_SOLID, new dojo.Color([255, 0, 0]), 3), new dojo.Color([125, 125, 125, 0.35]));
+    
+      locator = new esri.tasks.Locator(locatorURL);
+      
+      var mapDeferred = esri.arcgis.utils.createMap(webmapId, "map", {
+        mapOptions: { }, ignorePopups: true
+      });
+      mapDeferred.then(function(response) {    
+        map = response.map;
+        var basemapGallery = new esri.dijit.BasemapGallery({
+          showArcGISBasemaps: true,
+          bingMapsKey: 'Ald6WD3IRq8Owih4l6jWw1kv8a_ea2E2_-L0WcHI_ruJ1ckxarefRlTeJGCFIBIs',
+          map: map
+        }, "basemapGallery");
+        basemapGallery.startup();
+        
+        var layers = response.itemInfo.itemData.operationalLayers;   
+        if (map.loaded) {
+          initMap(layers);
+        } else {
+          dojo.connect(map, "onLoad", function() {
+            initMap(layers);
+          });
+        }
+        map.infoWindow.resize(325, 220);
+        map.infoWindow.setContent(dijit.byId("tabs").domNode);
+
+        dojo.connect(map.infoWindow, "onShow", function() {
+          dijit.byId("tabs").resize();
+          dijit.byId("tabs").selectChild(dijit.byId("SenateTab"));
+        });
+        dojo.connect(map, "onClick", doIdentify);
+        
+      },function(error){
+        console.log("Map creation failed: ", dojo.toJson(error));        
+      });
+      
+      var extent;
+  
+      // Get the extent
+      if (!startExtent)
+          extent = new esri.geometry.Extent({ xmin: -13890725, ymin: 5142963, xmax: -12973481, ymax: 5809494, spatialReference: { wkid: 102100} });
+      else {
+          extent = startExtent;
+      }
+            
+      connectRadioEvents();
+    
+      dojo.connect(dijit.byId('HouseTab'), "_onShow", function() {
+        zoomToAndSelect(true, "HouseTab", "tab");
+      });
+      dojo.connect(dijit.byId('SenateTab'), "_onShow", function() {
+        zoomToAndSelect(true, "SenateTab", "tab");          
+      });
+      dojo.connect(dijit.byId('CongressTab'), "_onShow", function() {
+        zoomToAndSelect(true, "CongressTab", "tab");
+      });
+      
+      dojo.connect(dijit.byId('txtAddress'), "onKeyPress", function(evt){
+        if (evt.keyCode == dojo.keys.ENTER) {
+          doAddressSearchSL(dojo.byId('txtAddress').value);
+        }
+      });
+    }
+    
+    function initMap(layers) {
+      legMapService = layers[0].layerObject;
+      identifyTask = new esri.tasks.IdentifyTask(layers[0].url);
+      identifyParams = new esri.tasks.IdentifyParameters();
+      identifyParams.tolerance = 0;
+      identifyParams.returnGeometry = true;
+      identifyParams.layerOption = esri.tasks.IdentifyParameters.LAYER_OPTION_ALL;
+      identifyParams.layerIds = [congressionalLayerId,houseLayerId,senateLayerId];
+      
+      senateQueryTask = new esri.tasks.QueryTask(layers[0].url + "/" + senateLayerId);
+      houseQueryTask = new esri.tasks.QueryTask(layers[0].url + "/" + houseLayerId);
+      congressQueryTask = new esri.tasks.QueryTask(layers[0].url + "/" + congressionalLayerId);
+      
+      pinPointGL = new esri.layers.GraphicsLayer();
+      updateLayers();
+      map.addLayer(pinPointGL);
+      
+      urlObject = esri.urlToObject(document.location.href);
+      urlObject.query = urlObject.query || {};
+      if(urlObject.query && urlObject.query.addr) {
+        doAddressSearchSL(urlObject.query.addr);
+      } else if (urlObject.query && urlObject.query.dist) {
+        doDistSearch(urlObject.query.dist, urlObject.query.disttype);
+      } else if (urlObject.query && urlObject.query.latitude && urlObject.query.longitude) {
+        doLocSearch(urlObject.query.latitude, urlObject.query.longitude); //lat-long comma separated
+      } else {
+        //init();
+      }
+    }
+    
+    function connectRadioEvents () {
+      h1 = dojo.connect(dijit.byId('rdoHouse'), "onChange", function(newVal) {zoomToAndSelect(newVal, "HouseTab", "radio");});
+      h2 = dojo.connect(dijit.byId('rdoSenate'), "onChange", function(newVal) {zoomToAndSelect(newVal, "SenateTab", "radio");});
+      h3 = dojo.connect(dijit.byId('rdoCongress'), "onChange", function(newVal) {zoomToAndSelect(newVal, "CongressTab", "radio");});
+    }
+    
+    function zoomToAndSelect(newVal, e, src) {
+      if (e == "HouseTab" && newVal == true) {
+        if (src == "tab")
+          dijit.byId('rdoHouse').set('checked',true);
+        else
+          dijit.byId('tabs').selectChild(dijit.byId('HouseTab'));
+        if (houseResults) {
+          showFeature(houseResults.features[0]);
+          map.setExtent(houseResults.features[0].geometry.getExtent(), true);
+        }
+        legMapService.setVisibleLayers([houseLayerId]);
+      } else if (e == "SenateTab" && newVal == true) {
+        if (src == "tab")
+          dijit.byId('rdoSenate').set('checked',true);
+        else
+          dijit.byId('tabs').selectChild(dijit.byId('SenateTab'));
+        dijit.byId('rdoSenate').set('checked',true);
+        if (senateResults) {
+          showFeature(senateResults.features[0]);
+          map.setExtent(senateResults.features[0].geometry.getExtent(), true);
+        }
+        legMapService.setVisibleLayers([senateLayerId]);
+      } else if (e == "CongressTab" && newVal == true) {
+        if (src == "tab")
+          dijit.byId('rdoCongress').set('checked',true);
+        else
+          dijit.byId('tabs').selectChild(dijit.byId('CongressTab'));
+        dijit.byId('rdoCongress').set('checked',true);
+        if (congressResults) {
+          showFeature(congressResults.features[0]);
+          map.setExtent(congressResults.features[0].geometry.getExtent(), true);
+        }
+        legMapService.setVisibleLayers([congressionalLayerId]);
+      }
+    }
+    
+	  function showFeature(feature) {
+      map.graphics.clear();
+      feature.setSymbol(highlightSymbol);
+      map.graphics.add(feature);
+    }
+
+    function doDistSearch(districtNum, districtType) { //do district search
+      //h,s,c
+      var query = new esri.tasks.Query();
+      switch (districtType) {
+        case "h":
+          query.where = houseDistrictFieldName + " = " + districtNum;
+          query.returnGeometry = true;
+          query.outFields = ["*"];
+          houseQueryTask.execute(query, function(results) {
+            console.log(results);
+            if (results.features.length == 1) {
+              map.setExtent(results.features[0].geometry.getExtent(), true);
+              map.graphics.add(results.features[0].setSymbol(highlightSymbol));
+              dijit.byId('rdoHouse').set('checked',true);
+            }
+          });
+          break;
+        case "s":
+          query.where = senateDistrictFieldName + " = " + districtNum;
+          query.returnGeometry = true;
+          query.outFields = ["*"];
+          senateQueryTask.execute(query, function(results) {
+            console.log(results);
+            if (results.features.length == 1) {
+              map.setExtent(results.features[0].geometry.getExtent(), true);
+              map.graphics.add(results.features[0].setSymbol(highlightSymbol));
+              dijit.byId('rdoSenate').set('checked',true);
+            }
+          });
+          break;
+        case "c":
+          query.where = congressDistrictFieldName + " = " + districtNum;
+          query.returnGeometry = true;
+          query.outFields = ["*"];
+          congressQueryTask.execute(query, function(results) {
+            console.log(results);
+            if (results.features.length == 1) {
+              map.setExtent(results.features[0].geometry.getExtent(), true);
+              map.graphics.add(results.features[0].setSymbol(highlightSymbol));
+              dijit.byId('rdoCongress').set('checked',true);
+            }
+          });
+          break;
+      }
+	  }
+    
+    function doLocSearch(latitude,longitude) { //do single line address search
+      var evtObj = {};
+      evtObj.mapPoint = esri.geometry.geographicToWebMercator(new esri.geometry.Point(longitude, latitude));
+      evtObj.screenPoint = esri.geometry.toScreenPoint(map.extent, map.width, map.height, evtObj.mapPoint);
+      doIdentify(evtObj);
+	  }
+    
+	  function doAddressSearchSL(theAddress) { //do single line address search
+      var address = {"SingleLine": theAddress};
+      locator.outSpatialReference = map.spatialReference;
+      var options = {
+        address:address,
+        outFields:["*"]
+      }
+      locator.addressToLocations(options, function(candidates){
+        var evtObj = {};
+        if (candidates.length > 0) {
+          evtObj.mapPoint = candidates[0].location;
+          evtObj.screenPoint = esri.geometry.toScreenPoint(map.extent, map.width, map.height, evtObj.mapPoint);
+          doIdentify(evtObj);
+        } else {
+          alert('Unable to locate the address.  Please try again.');
+        }
+      }, function(err){
+        console.log(err);
+      });
+	  }
+      
+    function showResults(candidates){
+      if (candidates.length > 0) {
+        map.centerAt(candidates[0].location);
+        var evtObj = {};
+        evtObj.mapPoint = candidates[0].location;
+        doIdentify(evtObj);
+      }
+    }
+    
+    function updateLayers() {
+      if (dijit.byId('rdoHouse').attr('checked') == true) {
+        legMapService.setVisibleLayers([houseLayerId]);
+        dijit.byId('tabs').selectChild(dijit.byId('HouseTab'));
+      } else if (dijit.byId('rdoSenate').attr('checked') == true) {
+        legMapService.setVisibleLayers([senateLayerId]);
+        dijit.byId('tabs').selectChild(dijit.byId('SenateTab'));
+      } else {
+        legMapService.setVisibleLayers([congressionalLayerId]);
+        dijit.byId('tabs').selectChild(dijit.byId('CongressTab'));
+      }
+    }
+
+    function showFlag(location) {
+      var normalpictureMarkerSymbol = new esri.symbol.PictureMarkerSymbol('images/redflag.png', 30, 30);
+      normalpictureMarkerSymbol.xoffset = 15;
+      normalpictureMarkerSymbol.yoffset = 15;
+
+      var flagGraphic = new esri.Graphic(new esri.geometry.Point(parseFloat(location.x), parseFloat(location.y), new esri.SpatialReference({ wkid: 102100 })), normalpictureMarkerSymbol);
+      pinPointGL.add(flagGraphic);
+    }
+
+    function doIdentify(evt) {
+      map.graphics.clear();
+      pinPointGL.clear();
+      showFlag(evt.mapPoint);
+      identifyParams.geometry = evt.mapPoint;
+      identifyParams.mapExtent = map.extent;
+      identifyParams.maxAllowableOffset = 0;
+      identifyTask.execute(identifyParams, function(idResults) {
+        addIdentifyResultsToMap(idResults, evt);
+      });
+    }
+
+    function addIdentifyResultsToMap(idResults, evt) {
+      houseResults = {displayFieldName:null,features:[]};
+      senateResults = {displayFieldName:null,features:[]};
+      congressResults = {displayFieldName:null,features:[]};
+
+      for (var i=0, il=idResults.length; i<il; i++) {
+        var idResult = idResults[i];
+        if (idResult.layerId === congressionalLayerId) {
+          if (!congressResults.displayFieldName) {congressResults.displayFieldName = idResult.displayFieldName};
+          congressResults.features.push(idResult.feature);
+        }
+        else if (idResult.layerId === houseLayerId) {
+          if (!houseResults.displayFieldName) {houseResults.displayFieldName = idResult.displayFieldName};
+          houseResults.features.push(idResult.feature);
+        }
+        else if (idResult.layerId === senateLayerId) {
+          if (!senateResults.displayFieldName) {senateResults.displayFieldName = idResult.displayFieldName};
+          senateResults.features.push(idResult.feature);
+        }
+      }
+      dijit.byId("SenateTab").setContent(layerTabContent(senateResults,"senateResults"));
+      dijit.byId("HouseTab").setContent(layerTabContent(houseResults,"houseResults"));
+      dijit.byId("CongressTab").setContent(layerTabContent(congressResults,"congressResults"));
+      map.infoWindow.setTitle("Elected Officials");
+      map.infoWindow.show(evt.screenPoint, map.getInfoWindowAnchor(evt.screenPoint));
+      zoomToAndSelect(true, dijit.byId('tabs').selectedChildWidget.id, "tab");
+    }
+
+	  function layerTabContent(layerResults, layerName) {
+      var content = "";
+      switch (layerName) {
+        case "houseResults":
+          var houseTemplate = "<b>" + layerResults.features[0].attributes['Title'] + " " + layerResults.features[0].attributes['First Name'] + " " + layerResults.features[0].attributes['Last Name'] + "</b><br/>";
+          houseTemplate += "Party: " + layerResults.features[0].attributes['Party'] + "<br/>";
+          houseTemplate += "District: " + layerResults.features[0].attributes['District_N'] + "<br/>";
+          houseTemplate += "Phone: " + layerResults.features[0].attributes['Capitol Phone'] + "<br/>";
+          houseTemplate += "Address: " + layerResults.features[0].attributes['Capital Address'] + "<br/>";
+          houseTemplate +=  "<a href='mailto:" + layerResults.features[0].attributes['Email'] + "'>" + layerResults.features[0].attributes['Email'] + "</a><br/>";
+          houseTemplate +=  "<a href='" + layerResults.features[0].attributes['URL'] + "' target='_blank'>" + layerResults.features[0].attributes['URL'] + "</a><br/>";
+          content = houseTemplate;
+          break;
+        case "senateResults":
+          var senateTemplate = "<b>" + layerResults.features[0].attributes['Title'] + " " + layerResults.features[0].attributes['First Name'] + " " + layerResults.features[0].attributes['Last Name'] + "</b><br/>";
+          senateTemplate += "Party: " + layerResults.features[0].attributes['Party'] + "<br/>";
+          senateTemplate += "District: " + layerResults.features[0].attributes['District_N'] + "<br/>";
+          senateTemplate += "Phone: " + layerResults.features[0].attributes['Capitol Phone'] + "<br/>";
+          senateTemplate += "Address: " + layerResults.features[0].attributes['Capital Address'] + "<br/>";
+          senateTemplate +=  "<a href='mailto:" + layerResults.features[0].attributes['Email'] + "'>" + layerResults.features[0].attributes['Email'] + "</a><br/>";
+          senateTemplate +=  "<a href='" + layerResults.features[0].attributes['URL'] + "' target='_blank'>" + layerResults.features[0].attributes['URL'] + "</a><br/>";
+          content = senateTemplate;
+          break;
+        case "congressResults":
+          content = "District: " + layerResults.features[0].attributes['District_N'];
+          break;
+      }
+      return content;
+    }
+
+    dojo.ready(init);
+    </script>
+
+</head>
+<body style="margin: 0px" class="claro">
+    <div id="mainWindow" dojotype="dijit.layout.BorderContainer" design="headline" gutters="false" style="width:100%; height:100%;border:0;">
+    
+      <div id="header" dojotype="dijit.layout.ContentPane" region="top" style="height:170px;">
+       
+        <table id="tblAddress" cellspacing="2">
+            <tr>
+                
+				<td valign="top" width="60%">
+					<div>
+						<h2><a href="http://www.oregonlegislature.gov" /><img src="http://www.oregonlegislature.gov/ImagesAndVideo/CapitolLogo4Find.png" width="181" height="60" align="left" alt="Oregon State Legislature Logo" /></a>Oregon&nbsp;State&nbsp;Legislature
+						<br />
+						Who Represents Me?</h2>
+					</div>
+					<div class="disclaimer">The Oregon State Legislature strives to provide accurate information.  If you have  questions about who represents you, please contact your county <a href="http://www.sos.state.or.us/elections/pages/voterresources/clerk.html">Elections Office</a>.</div>
+				</td>
+				
+             <td>&nbsp;</td>
+
+				
+				<td "width=40%">
+					<div>
+						<span style="font-weight : bold;">Enter an Address</span>
+					</div>
+
+					<div>
+						<input name="txtAddress" type="text" dojotype="dijit.form.TextBox" data-dojo-props="placeHolder: '*Requires address, city, state, and zip code'" id="txtAddress" style="width:100%;" />
+					</div>
+					<div>
+						<input type="button" dojotype="dijit.form.Button" name="btnAddress" label="Find My District" onclick="javascript:doAddressSearchSL(dojo.byId('txtAddress').value)" id="btnAddress" />
+					</div>
+				
+				</td>
+            </tr>
+        </table>
+          <!--		  -->
+		  <div class="hideDistType">
+          District Type:
+           <input type="radio" dojoType="dijit.form.RadioButton" name="rdoType" id="rdoSenate" value="senateLayer" checked="checked" />
+              <label for="radioTwo">
+                  Senate
+              </label>
+           <input type="radio" dojoType="dijit.form.RadioButton" name="rdoType" id="rdoHouse" value="legislativeLayer" />
+              <label for="radioTwo">
+                  House
+              </label>
+            <input type="radio" dojoType="dijit.form.RadioButton" name="rdoType" id="rdoCongress" value="congressLayer" />
+              <label for="radioTwo">
+                  Congressional
+              </label>
+          </div>
+
+      </div>
+    <div id="map" dojotype="dijit.layout.ContentPane" region="center" style="margin:0px;padding:0"> <!--style="background-color:white; margin:5px; border-width: thin; border-style:solid; border-color:Black;"-->
+        <div style="position:absolute; right:20px; top:10px; z-Index:999;">
+          <div data-dojo-type="dijit.TitlePane" 
+               data-dojo-props="title:'Switch Basemap', closable:false,  open:false">
+            <div data-dojo-type="dijit.layout.ContentPane" style="width:380px; height:280px; overflow:auto;">
+            <div id="basemapGallery" ></div></div>
+          </div>
+        </div>
+    </div>
+  </div>
+	<div id="tabs" dojoType="dijit.layout.TabContainer" style="width:305px;height:170px;">
+    <div id="SenateTab" dojoType="dijit.layout.ContentPane" title="Senate"></div>
+    <div id="HouseTab" dojoType="dijit.layout.ContentPane" title="House"></div>
+    <div id="CongressTab" dojoType="dijit.layout.ContentPane" title="Congress"></div>
+  </div>
+</body>
+</html>
+
+
+
+
