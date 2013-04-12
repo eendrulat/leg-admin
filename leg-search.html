@@ -18,19 +18,21 @@
       dojo.require("dijit.dijit"); // optimize: load dijit layer
       dojo.require("dijit.form.Button");
       dojo.require("dijit.form.TextBox");
-      
+	  
+	  //send request for valid addresses to leg-districts page
       function submitForm() {
         if (dojo.byId('addr').value != "") {
           window.location = 'leg-districts.html?addr=' + dojo.byId('addr').value;
         } else {
-          dojo.byId('errorMsg').innerHTML = "Please enter a valid address";
+          dojo.byId('errorMsg').innerHTML = "Please enter a valid address"; //handle invalid addresses
         }
       }
       
+	  
       function init() {
         dojo.connect(dijit.byId('addr'), "onKeyPress", function(evt){
           if (evt.keyCode == dojo.keys.ENTER) {
-            submitForm();
+            submitForm(); // enables submitting form 'on-enter' event
           } else {
             dojo.byId('errorMsg').innerHTML = "";
           }

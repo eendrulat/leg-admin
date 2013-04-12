@@ -3,24 +3,20 @@
 This application is designed to provide an easy way to discover who represents you in the Oregon House and Senate, as well as the US Congress, based on an address search tool.
 
 
-
 [View it live](http://htmlpreview.github.io/?https://github.com/eendrulat/leg-admin/blob/master/leg-search.html)
 
-![App](http://htmlpreview.github.io/?https://github.com/eendrulat/leg-admin/app.jpg)
+![App](https://github.com/eendrulat/leg-admin/blob/master/app.JPG)
 
 ## Features
-* feature 1
-* feature 2
+* Includes two main pages: simple search page (leg-search.html) and main map interface (leg-districts.html)
+* Simple search page contains a single line address search bar. Passes address to leg-districts.html
+* Main legislative district page will focus on the appropriate legislative district by parameters passed through the URL: 1) from the leg-search page (?addr=), 2) for a specific district, e.g. Congressional district 5 (?dist=5&disttype=c), or 3) a latitude and longitude (?longitude=-123&latitude=45)
+* Main legislative district page also allows searching by address, or interactively selecting districts from the map.
 
-## Instructions
+## Project Details
 
-1. Fork and then clone the repo or download the .zip file. 
-2. Run and try the examples.
-
-## Requirements
-
-* Notepad or your favorite HTML editor
-* Web browser with access to the Internet
+* ArcGIS Javascript API, v. 3.4
+* Application was developed by Scott Moore (Esri), Erik Endrulat (Oregon GEO), and Bill Sweeny (OR LegAdmin)
 
 ## Resources
 
