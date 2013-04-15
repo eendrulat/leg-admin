@@ -46,6 +46,7 @@
 		.disclaimer {
 		font-size: 11px;
 		}
+		
     </style>
 
     <script>var dojoConfig = {parseOnLoad: true};</script>
@@ -61,7 +62,6 @@
 		dojo.require("dijit.layout.ContentPane");
 		dojo.require("dijit.layout.TabContainer");
 		dojo.require("esri.arcgis.utils");
-		//dojo.require("esri.virtualearth.VETiledLayer");
 		dojo.require("dijit.TitlePane");
 		dojo.require("esri.dijit.BasemapGallery");
 		
@@ -73,7 +73,7 @@
 		var houseResults, senateResults, congressResults;
 		var highlightSymbol;
 		var initObj = {};
-		var locatorURL = "http://navigator.state.or.us/ArcGIS/rest/services/Locators/gc_Composite/GeocodeServer"; // oregon composite geocode service
+		var locatorURL = "http://navigator.state.or.us/ArcGIS/rest/services/Locators/gc_Composite/GeocodeServer"; // OR composite geocode service
 		var webmapId = "20656302c95945f0b90e43d584a15ade"; // OR Legislature Web Map on Oregon ArcGIS Online
 		var congressionalLayerId = 3;
 		var houseLayerId = 4;
@@ -182,13 +182,19 @@
 		  
 		  urlObject = esri.urlToObject(document.location.href);
 		  urlObject.query = urlObject.query || {};
+		  
 		  if(urlObject.query && urlObject.query.addr) {
+			txtAddress.value = urlObject.query.addr; //pass address from URL to form
+			dijit.byId('txtAddress').set('placeHolder',''); //remove placeholder
 			doAddressSearchSL(urlObject.query.addr);
-		  } else if (urlObject.query && urlObject.query.dist) {
+		  } 
+		  else if (urlObject.query && urlObject.query.dist) {
 			doDistSearch(urlObject.query.dist, urlObject.query.disttype);
-		  } else if (urlObject.query && urlObject.query.latitude && urlObject.query.longitude) {
+		  } 
+		  else if (urlObject.query && urlObject.query.latitude && urlObject.query.longitude) {
 			doLocSearch(urlObject.query.latitude, urlObject.query.longitude); //lat-long comma separated
-		  } else {
+		  } 
+		  else {
 			//init();
 		  }
 		}
@@ -354,7 +360,7 @@
 		  identifyParams.mapExtent = map.extent;
 		  identifyParams.maxAllowableOffset = 0;
 		  identifyTask.execute(identifyParams, function(idResults) {
-			addIdentifyResultsToMap(idResults, evt);
+		  addIdentifyResultsToMap(idResults, evt);
 		  });
 		}
 
@@ -385,13 +391,14 @@
 		  
 		  
 		// offset original location of the infowindow
-		  var infoPoint = new esri.geometry.Point(evt.screenPoint);
-		  infoPoint.y = evt.screenPoint.y
-		  infoPoint.x = evt.screenPoint.x + 35;
+		//var infoPoint = new esri.geometry.Point;
+		//infoPoint.y = 40;
+		//infoPoint.x =  4;
 		
-		   //map.infoWindow.show(evt.screenPoint, map.getInfoWindowAnchor(evt.screenPoint));
-			map.infoWindow.show(infoPoint, map.getInfoWindowAnchor(infoPoint));
+		 map.infoWindow.show(evt.screenPoint, map.getInfoWindowAnchor(evt.screenPoint));
+			//map.infoWindow.show(infoPoint, map.getInfoWindowAnchor(infoPoint));
 		  
+		  //map.infoWindow.show(4,40);
 		  zoomToAndSelect(true, dijit.byId('tabs').selectedChildWidget.id, "tab");
 		}
 
@@ -432,7 +439,7 @@
 <body style="margin: 0px" class="claro">
     <div id="mainWindow" dojotype="dijit.layout.BorderContainer" design="headline" gutters="false" style="width:100%; height:100%;border:0;">
     
-      <div id="header" dojotype="dijit.layout.ContentPane" region="top" style="height:170px;">
+      <div id="header" dojotype="dijit.layout.ContentPane" region="top">
        
         <table id="tblAddress" cellspacing="2">
             <tr>
@@ -445,10 +452,7 @@
 					</div>
 					<div class="disclaimer">The Oregon State Legislature strives to provide accurate information.  If you have  questions about who represents you, please contact your county <a href="http://www.sos.state.or.us/elections/pages/voterresources/clerk.html">Elections Office</a>.</div>
 				</td>
-				
-             <td>&nbsp;</td>
 
-				
 				<td "width=40%">
 					<div>
 						<span style="font-weight : bold;">Enter an Address</span>
