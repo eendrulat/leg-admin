@@ -5,8 +5,7 @@ This application is designed to provide an easy way to discover who represents y
 
 [View it live](http://htmlpreview.github.io/?https://github.com/eendrulat/leg-admin/blob/master/leg-search.html)
 
-![App](https://raw.github.com/eendrulat/leg-admin/master/app.jpg)
-
+![Screenshot](https://raw.github.com/eendrulat/leg-admin/master/app.JPG)
 ## Features
 * Includes two main pages: simple search page (leg-search.html) and main map interface (leg-districts.html)
 * Simple search page contains a single line address search bar. Passes address to leg-districts.html
