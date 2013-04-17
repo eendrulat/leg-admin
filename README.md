@@ -5,7 +5,7 @@ This application is designed to provide an easy way to discover who represents y
 
 [View it live](http://htmlpreview.github.io/?https://github.com/eendrulat/leg-admin/blob/master/leg-search.html)
 
-![App](https://github.com/eendrulat/leg-admin/blob/master/app.JPG)
+![App](https://raw.github.com/eendrulat/leg-admin/master/app.jpg)
 
 ## Features
 * Includes two main pages: simple search page (leg-search.html) and main map interface (leg-districts.html)
@@ -44,6 +44,5 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-A copy of the license is available in the repository's [license.txt]( https://raw.github.com/alaframboise/rockstar-repo-template/master/license.txt) file.
-
+A copy of the license is available in the repository's [license.txt]( https://raw.github.com/eendrulat/repo-template/master/license.txt) file.
 [](This is how you hide something in your README.md)
