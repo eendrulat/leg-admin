@@ -395,10 +395,12 @@
 		//infoPoint.y = 40;
 		//infoPoint.x =  4;
 		
-		 map.infoWindow.show(evt.screenPoint, map.getInfoWindowAnchor(evt.screenPoint));
-			//map.infoWindow.show(infoPoint, map.getInfoWindowAnchor(infoPoint));
+		   //map.infoWindow.show(evt.screenPoint, map.getInfoWindowAnchor(evt.screenPoint));
+		//map.infoWindow.show(evt.screenPoint,esri.dijit.InfoWindow.ANCHOR_UPPERRIGHT);
+
+		//map.infoWindow.show(infoPoint, map.getInfoWindowAnchor(infoPoint));
 		  
-		  //map.infoWindow.show(4,40);
+		map.infoWindow.show(evt.screenPoint,esri.dijit.InfoWindow.ANCHOR_UPPERRIGHT);
 		  zoomToAndSelect(true, dijit.byId('tabs').selectedChildWidget.id, "tab");
 		}
 

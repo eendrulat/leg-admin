@@ -15,8 +15,8 @@
 			font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
 			font-size: 16pt;
 		}
-		#wrapper{
-		font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
+			#wrapper{
+			font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
 		}
 		
 	</style>
@@ -32,7 +32,9 @@
 	  //send request for valid addresses to leg-districts page
       function submitForm() {
         if (dojo.byId('addr').value != "") {
-          window.location = 'leg-districts.html?addr=' + dojo.byId('addr').value;
+          dest = 'leg-districts.html?addr=' + dojo.byId('addr').value;
+		  window.open(dest,'_blank');
+		  //window.location = 'leg-districts.html?addr=' + dojo.byId('addr').value;
         } else {
           dojo.byId('errorMsg').innerHTML = "Please enter a valid address"; //handle invalid addresses
         }
