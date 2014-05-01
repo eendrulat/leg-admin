@@ -1,4 +1,5 @@
 #Find Your Legislator App
+(DEPRECATED PROJECT)
 
 This application is designed to provide an easy way to discover who represents you in the Oregon House and Senate, as well as the US Congress, based on an address search tool.
 
